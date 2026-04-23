@@ -13,6 +13,7 @@ model Election {
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
   snapshots       Snapshot[]
+  ingestionRuns   IngestionRun[]
 
   @@map("elections")
 }
@@ -75,4 +76,24 @@ model CandidateResult {
   @@index([snapshotId], map: "idx_candidate_result_snapshot_id")
   @@index([candidateId], map: "idx_candidate_result_candidate_id")
   @@map("candidate_results")
+}
+
+model IngestionRun {
+  id            String    @id @default(uuid()) @db.Uuid
+  electionId    String    @map("election_id") @db.Uuid
+  startedAt     DateTime  @default(now()) @map("started_at")
+  endedAt       DateTime? @map("ended_at")
+  durationMs    Int?      @map("duration_ms")
+  status        String
+  snapshotId    String?   @map("snapshot_id") @db.Uuid
+  snapshotCreated Boolean @default(false) @map("snapshot_created")
+  errorMessage  String?   @map("error_message")
+  details       Json?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  election      Election  @relation(fields: [electionId], references: [id])
+
+  @@index([electionId], map: "idx_ingestion_run_election_id")
+  @@index([startedAt], map: "idx_ingestion_run_started_at")
+  @@index([status], map: "idx_ingestion_run_status")
+  @@map("ingestion_runs")
 }

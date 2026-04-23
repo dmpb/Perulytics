@@ -1,4 +1,4 @@
-import { Controller, HttpCode, Post } from '@nestjs/common';
+import { Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { IngestionService } from '../services/ingestion/ingestion.service';
 import { ok } from '../utils/api-response.util';
 
@@ -10,6 +10,12 @@ export class IngestionController {
   @HttpCode(200)
   async runIngestion() {
     const data = await this.ingestionService.runIngestion();
+    return ok(data);
+  }
+
+  @Get('status')
+  async status() {
+    const data = await this.ingestionService.getIngestionStatus();
     return ok(data);
   }
 }

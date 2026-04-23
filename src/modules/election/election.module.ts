@@ -7,6 +7,7 @@ import { OnpeClientService } from '../../services/ingestion/onpe-client.service'
 import { CandidateRepository } from '../../repositories/candidate.repository';
 import { CandidateResultRepository } from '../../repositories/candidate-result.repository';
 import { ElectionRepository } from '../../repositories/election.repository';
+import { IngestionRunRepository } from '../../repositories/ingestion-run.repository';
 import { SnapshotRepository } from '../../repositories/snapshot.repository';
 import { IngestionController } from '../../controllers/ingestion.controller';
 import { IngestionJob } from '../../jobs/ingestion.job';
@@ -19,6 +20,7 @@ import { IngestionJob } from '../../jobs/ingestion.job';
     IngestionService,
     OnpeClientService,
     ElectionRepository,
+    IngestionRunRepository,
     SnapshotRepository,
     CandidateRepository,
     CandidateResultRepository,

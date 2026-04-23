@@ -14,6 +14,21 @@ export class SnapshotRepository {
     });
   }
 
+  async findLatestSummaryByElectionId(electionId: string) {
+    return this.prisma.snapshot.findFirst({
+      where: { electionId },
+      orderBy: { timestamp: 'desc' },
+      select: {
+        id: true,
+        timestamp: true,
+        totalVotosEmitidos: true,
+        totalVotosValidos: true,
+        actasContabilizadas: true,
+        participacionCiudadana: true,
+      },
+    });
+  }
+
   async createFromTotals(
     electionId: string,
     totals: OnpeTotalsData,
