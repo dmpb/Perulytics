@@ -6,21 +6,16 @@ import { ok } from '../utils/api-response.util';
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
-  @Get('top3')
-  async top3() {
-    const data = await this.analyticsService.getTop3();
-    return ok(data);
-  }
-
-  @Get('momentum')
-  async momentum() {
-    const data = await this.analyticsService.getMomentum();
-    return ok(data);
-  }
-
-  @Get('critical-difference')
-  async criticalDifference() {
-    const data = await this.analyticsService.getCriticalDifference();
+  @Get('results')
+  async results(@Query('codigos') codigos?: string) {
+    const parsedCodigos = codigos
+      ? codigos
+          .split(',')
+          .map((item) => Number(item.trim()))
+          .filter((item) => Number.isFinite(item))
+      : undefined;
+    const data =
+      await this.analyticsService.getResultsByCandidates(parsedCodigos);
     return ok(data);
   }
 

@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: perulytics-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: perulytics
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d perulytics']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: perulytics-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/perulytics?schema=public
+      ONPE_ELECTION_ID: ${ONPE_ELECTION_ID:-10}
+      ONPE_TIPO_FILTRO: ${ONPE_TIPO_FILTRO:-eleccion}
+      ONPE_COOKIE: ${ONPE_COOKIE:-}
+      ONPE_COOKIE_BASE64: ${ONPE_COOKIE_BASE64:-}
+    ports:
+      - '3000:3000'
+
+volumes:
+  pgdata:

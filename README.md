@@ -25,6 +25,40 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Docker (API + PostgreSQL)
+
+### Produccion local
+
+```bash
+docker compose up --build -d
+docker compose logs -f api
+```
+
+La API queda en `http://localhost:3000` y PostgreSQL en `localhost:5432`.
+
+Para detener:
+
+```bash
+docker compose down
+```
+
+### Desarrollo con hot reload
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Este modo ejecuta:
+
+- `npm ci`
+- `npx prisma generate`
+- `npx prisma db push`
+- `npm run start:dev`
+
+### Variables de entorno
+
+Usa `.env.example` como base para tu `.env`.
+
 ## Project setup
 
 ```bash

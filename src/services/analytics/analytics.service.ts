@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CandidateResultRepository } from '../../repositories/candidate-result.repository';
 import { ElectionRepository } from '../../repositories/election.repository';
-import { AnalyticsCalculatorService } from './analytics-calculator.service';
 
 @Injectable()
 export class AnalyticsService {
   constructor(
     private readonly electionRepository: ElectionRepository,
     private readonly candidateResultRepository: CandidateResultRepository,
-    private readonly analyticsCalculator: AnalyticsCalculatorService,
   ) {}
 
   private async getElection() {
@@ -17,60 +15,76 @@ export class AnalyticsService {
     return this.electionRepository.getOrCreate(onpeElectionId, tipoFiltro);
   }
 
-  async getTop3() {
-    const election = await this.getElection();
-    const latest = await this.candidateResultRepository.getLatestWithCandidate(
-      election.id,
-    );
-    const mapped = latest.results.map((item) => ({
-      codigoAgrupacionPolitica: item.candidate.codigoAgrupacionPolitica,
-      nombreAgrupacionPolitica: item.candidate.nombreAgrupacionPolitica,
-      nombreCandidato: item.candidate.nombreCandidato,
-      totalVotosValidos: item.totalVotosValidos,
-      porcentajeVotosValidos: item.porcentajeVotosValidos,
-      porcentajeVotosEmitidos: item.porcentajeVotosEmitidos,
-    }));
-
-    return {
-      snapshotTimestamp: latest.snapshot?.timestamp ?? null,
-      top3: this.analyticsCalculator.getTop3(mapped),
-    };
-  }
-
-  async getMomentum() {
+  async getResultsByCandidates(codigosAgrupacionPolitica?: number[]) {
     const election = await this.getElection();
     const snapshots =
       await this.candidateResultRepository.getLastTwoSnapshotsWithResults(
         election.id,
       );
-    if (snapshots.length < 2) {
-      return [];
+    if (snapshots.length === 0) {
+      return {
+        currentSnapshotTimestamp: null,
+        previousSnapshotTimestamp: null,
+        results: [],
+      };
     }
 
     const [current, previous] = snapshots;
-    const currentMapped = current.candidateResults.map((item) => ({
-      codigoAgrupacionPolitica: item.candidate.codigoAgrupacionPolitica,
-      nombreAgrupacionPolitica: item.candidate.nombreAgrupacionPolitica,
-      nombreCandidato: item.candidate.nombreCandidato,
-      totalVotosValidos: item.totalVotosValidos,
-      porcentajeVotosValidos: item.porcentajeVotosValidos,
-      porcentajeVotosEmitidos: item.porcentajeVotosEmitidos,
-    }));
-    const previousMapped = previous.candidateResults.map((item) => ({
-      codigoAgrupacionPolitica: item.candidate.codigoAgrupacionPolitica,
-      nombreAgrupacionPolitica: item.candidate.nombreAgrupacionPolitica,
-      nombreCandidato: item.candidate.nombreCandidato,
-      totalVotosValidos: item.totalVotosValidos,
-      porcentajeVotosValidos: item.porcentajeVotosValidos,
-      porcentajeVotosEmitidos: item.porcentajeVotosEmitidos,
-    }));
+    const previousByCode = new Map<
+      number,
+      {
+        totalVotosValidos: number;
+        porcentajeVotosValidos: number;
+      }
+    >(
+      (previous?.candidateResults ?? []).map((item) => [
+        item.candidate.codigoAgrupacionPolitica,
+        {
+          totalVotosValidos: item.totalVotosValidos,
+          porcentajeVotosValidos: item.porcentajeVotosValidos,
+        },
+      ]),
+    );
 
-    return this.analyticsCalculator.getMomentum(currentMapped, previousMapped);
-  }
+    const codigosFiltro = codigosAgrupacionPolitica?.length
+      ? new Set(codigosAgrupacionPolitica)
+      : null;
 
-  async getCriticalDifference() {
-    const top = await this.getTop3();
-    return this.analyticsCalculator.getCriticalDifference(top.top3);
+    const results = current.candidateResults
+      .filter((item) =>
+        codigosFiltro ? codigosFiltro.has(item.candidate.codigoAgrupacionPolitica) : true,
+      )
+      .map((item) => {
+        const previousResult = previousByCode.get(
+          item.candidate.codigoAgrupacionPolitica,
+        );
+
+        const votosAnteriores = previousResult?.totalVotosValidos ?? 0;
+        const porcentajeAnterior = previousResult?.porcentajeVotosValidos ?? 0;
+
+        return {
+          codigoAgrupacionPolitica: item.candidate.codigoAgrupacionPolitica,
+          nombreAgrupacionPolitica: item.candidate.nombreAgrupacionPolitica,
+          nombreCandidato: item.candidate.nombreCandidato,
+          totalVotosValidos: item.totalVotosValidos,
+          porcentajeVotosValidos: item.porcentajeVotosValidos,
+          porcentajeVotosEmitidos: item.porcentajeVotosEmitidos,
+          comparativoAnterior: {
+            totalVotosValidos: votosAnteriores,
+            porcentajeVotosValidos: porcentajeAnterior,
+            deltaVotosValidos: item.totalVotosValidos - votosAnteriores,
+            deltaPorcentajeVotosValidos:
+              item.porcentajeVotosValidos - porcentajeAnterior,
+          },
+        };
+      })
+      .sort((a, b) => b.porcentajeVotosValidos - a.porcentajeVotosValidos);
+
+    return {
+      currentSnapshotTimestamp: current.timestamp,
+      previousSnapshotTimestamp: previous?.timestamp ?? null,
+      results,
+    };
   }
 
   async getTrends(codigoAgrupacionPolitica: number, limit = 120) {
