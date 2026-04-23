@@ -1,12 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { ok } from './utils/api-response.util';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getHealth() {
+    return ok({
+      status: 'ok',
+      service: 'perulytics-backend',
+      timestamp: new Date().toISOString(),
+    });
   }
 }

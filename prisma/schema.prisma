@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Election {
+  id              String     @id @default(uuid()) @db.Uuid
+  onpeElectionId  Int        @unique @map("onpe_election_id")
+  tipoFiltro      String     @default("eleccion") @map("tipo_filtro")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  snapshots       Snapshot[]
+
+  @@map("elections")
+}
+
+model Snapshot {
+  id                        String            @id @default(uuid()) @db.Uuid
+  electionId                String            @map("election_id") @db.Uuid
+  timestamp                 DateTime
+  actasContabilizadas       Float             @map("actas_contabilizadas")
+  contabilizadas            Int
+  totalActas                Int               @map("total_actas")
+  participacionCiudadana    Float             @map("participacion_ciudadana")
+  actasEnviadasJee          Float             @map("actas_enviadas_jee")
+  enviadasJee               Int               @map("enviadas_jee")
+  actasPendientesJee        Float             @map("actas_pendientes_jee")
+  pendientesJee             Int               @map("pendientes_jee")
+  idUbigeoDepartamento      Int               @map("id_ubigeo_departamento")
+  idUbigeoProvincia         Int               @map("id_ubigeo_provincia")
+  idUbigeoDistrito          Int               @map("id_ubigeo_distrito")
+  idUbigeoDistritoElectoral Int               @map("id_ubigeo_distrito_electoral")
+  totalVotosEmitidos        Int               @map("total_votos_emitidos")
+  totalVotosValidos         Int               @map("total_votos_validos")
+  porcentajeVotosEmitidos   Float             @map("porcentaje_votos_emitidos")
+  porcentajeVotosValidos    Float             @map("porcentaje_votos_validos")
+  createdAt                 DateTime          @default(now()) @map("created_at")
+  election                  Election          @relation(fields: [electionId], references: [id])
+  candidateResults          CandidateResult[]
+
+  @@unique([electionId, timestamp])
+  @@index([electionId], map: "idx_snapshot_election_id")
+  @@index([timestamp], map: "idx_snapshot_timestamp")
+  @@map("snapshots")
+}
+
+model Candidate {
+  id                         String            @id @default(uuid()) @db.Uuid
+  codigoAgrupacionPolitica   Int               @unique @map("codigo_agrupacion_politica")
+  nombreAgrupacionPolitica   String            @map("nombre_agrupacion_politica")
+  nombreCandidato            String            @map("nombre_candidato")
+  dniCandidato               String?           @map("dni_candidato")
+  createdAt                  DateTime          @default(now()) @map("created_at")
+  updatedAt                  DateTime          @updatedAt @map("updated_at")
+  candidateResults           CandidateResult[]
+
+  @@map("candidates")
+}
+
+model CandidateResult {
+  id                      String   @id @default(uuid()) @db.Uuid
+  snapshotId              String   @map("snapshot_id") @db.Uuid
+  candidateId             String   @map("candidate_id") @db.Uuid
+  totalVotosValidos       Int      @map("total_votos_validos")
+  porcentajeVotosValidos  Float    @map("porcentaje_votos_validos")
+  porcentajeVotosEmitidos Float    @map("porcentaje_votos_emitidos")
+  createdAt               DateTime @default(now()) @map("created_at")
+  snapshot                Snapshot @relation(fields: [snapshotId], references: [id])
+  candidate               Candidate @relation(fields: [candidateId], references: [id])
+
+  @@unique([snapshotId, candidateId])
+  @@index([snapshotId], map: "idx_candidate_result_snapshot_id")
+  @@index([candidateId], map: "idx_candidate_result_candidate_id")
+  @@map("candidate_results")
+}
