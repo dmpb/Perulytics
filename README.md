@@ -182,7 +182,12 @@ npm run start:dev
 
 ## Despliegue en Railway (produccion)
 
-Este repo ya incluye `railway.json` para forzar despliegue con Nixpacks (sin usar el `Dockerfile` de desarrollo).
+Este repo separa Dockerfiles:
+
+- `Dockerfile`: produccion (Railway)
+- `Dockerfile.dev`: desarrollo local
+
+Railway detecta automaticamente `Dockerfile` en la raiz.
 
 Configura en Railway estas variables:
 
