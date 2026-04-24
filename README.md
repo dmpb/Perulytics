@@ -180,6 +180,26 @@ npx prisma db push
 npm run start:dev
 ```
 
+## Despliegue en Railway (produccion)
+
+Este repo ya incluye `railway.json` para forzar despliegue con Nixpacks (sin usar el `Dockerfile` de desarrollo).
+
+Configura en Railway estas variables:
+
+- `DATABASE_URL`: URL de PostgreSQL de Railway
+- `PORT`: Railway la inyecta automaticamente (opcional definirla manualmente)
+- `NODE_ENV=production`
+- `ONPE_ELECTION_ID`
+- `ONPE_TIPO_FILTRO`
+- `ONPE_COOKIE` o `ONPE_COOKIE_BASE64` (si aplica)
+
+Comandos configurados:
+
+- Build: `npm run railway:build`
+- Start: `npm run railway:start`
+
+El arranque aplica migraciones con `prisma migrate deploy` antes de levantar la API.
+
 ## Prisma (migraciones vs db push)
 
 Este repo incluye `prisma.config.ts` (Prisma 7). En Docker, el arranque intenta aplicar migraciones y luego sincroniza schema según el `Dockerfile`.
