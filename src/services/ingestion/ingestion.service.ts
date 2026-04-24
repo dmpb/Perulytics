@@ -154,7 +154,7 @@ export class IngestionService {
 
     const [latestRun, latestSnapshot] = await Promise.all([
       this.ingestionRunRepository.findLatestByElectionId(election.id),
-      this.snapshotRepository.findLatestSummaryByElectionId(election.id),
+      this.snapshotRepository.findLatestByElectionId(election.id),
     ]);
 
     return {
