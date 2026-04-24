@@ -151,12 +151,6 @@ Detener:
 docker compose down
 ```
 
-### Opción 2: Docker Compose en modo desarrollo (hot reload)
-
-```bash
-docker compose -f docker-compose.dev.yml up --build
-```
-
 ### Conectar a Postgres desde el host (TablePlus / DBeaver)
 
 Usa host `127.0.0.1`, puerto `5432`, DB `perulytics`, usuario `postgres`, password `postgres` (según compose por defecto).
